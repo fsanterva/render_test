@@ -4,26 +4,44 @@ const puppeteer = require("puppeteer");
 const app = express();
 
 app.get("/", async (req, res) => {
-  const browser = await puppeteer.launch({
-    args: ["--no-sandbox", "--disable-setuid-sandbox"]
-  });
+  let browser;
 
-  const page = await browser.newPage();
+  try {
+    browser = await puppeteer.launch({
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage"
+      ],
+      headless: "new"
+    });
 
-  await page.goto("https://skyline.herold.at/project?dsrid=440&id=573576", {
-    waitUntil: "networkidle2",
-  });
+    const page = await browser.newPage();
 
-  const result = await page.$$eval('a[href*="id=2370"]', els =>
-    els.map(el => ({
-      text: el.textContent.trim(),
-      href: el.getAttribute("href"),
-    }))
-  );
+    await page.goto(
+      "https://skyline.herold.at/project?dsrid=440&id=573576",
+      { waitUntil: "networkidle2" }
+    );
 
-  await browser.close();
+    const result = await page.$$eval('a[href*="id=2370"]', els =>
+      els.map(el => ({
+        text: el.textContent.trim(),
+        href: el.getAttribute("href"),
+      }))
+    );
 
-  res.json(result);
+    res.json(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  } finally {
+    if (browser) await browser.close();
+  }
 });
 
-app.listen(10000, () => console.log("Server running"));
+// IMPORTANT: Render sets PORT automatically
+const PORT = process.env.PORT || 10000;
+
+app.listen(PORT, () => {
+  console.log("Server running on port", PORT);
+});
