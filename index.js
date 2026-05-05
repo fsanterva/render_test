@@ -9,7 +9,6 @@ app.get("/", async (req, res) => {
   try {
     browser = await puppeteer.launch({
       headless: "new",
-      executablePath: process.env.CHROME_PATH, // 🔥 KEY FIX
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
