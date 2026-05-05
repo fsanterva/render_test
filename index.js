@@ -1,30 +1,70 @@
-const express = require("express");
-const app = express();
-
-app.get("/", async (req, res) => {
-  try {
-    const response = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
-    );
-
-    const data = await response.json();
-
-    if (!data || !data.bitcoin || !data.bitcoin.usd) {
-      throw new Error("Invalid API response");
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Snake Game</title>
+  <style>
+    canvas {
+      background: black;
+      display: block;
+      margin: auto;
     }
+  </style>
+</head>
+<body>
+<canvas id="game" width="400" height="400"></canvas>
 
-    res.json({
-      symbol: "BTC",
-      price_usd: data.bitcoin.usd,
-      updated: new Date().toISOString(),
-    });
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
 
-  } catch (err) {
-    res.status(500).json({
-      error: err.message,
-    });
-  }
+let snake = [{x: 200, y: 200}];
+let direction = "RIGHT";
+let food = {x: 100, y: 100};
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowUp") direction = "UP";
+  if (e.key === "ArrowDown") direction = "DOWN";
+  if (e.key === "ArrowLeft") direction = "LEFT";
+  if (e.key === "ArrowRight") direction = "RIGHT";
 });
 
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log("BTC server running on port", PORT));
+function draw() {
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, 400, 400);
+
+  ctx.fillStyle = "red";
+  ctx.fillRect(food.x, food.y, 10, 10);
+
+  ctx.fillStyle = "lime";
+  snake.forEach(part => {
+    ctx.fillRect(part.x, part.y, 10, 10);
+  });
+}
+
+function update() {
+  let head = {...snake[0]};
+
+  if (direction === "RIGHT") head.x += 10;
+  if (direction === "LEFT") head.x -= 10;
+  if (direction === "UP") head.y -= 10;
+  if (direction === "DOWN") head.y += 10;
+
+  snake.unshift(head);
+
+  if (head.x === food.x && head.y === food.y) {
+    food.x = Math.floor(Math.random() * 40) * 10;
+    food.y = Math.floor(Math.random() * 40) * 10;
+  } else {
+    snake.pop();
+  }
+}
+
+function loop() {
+  update();
+  draw();
+}
+
+setInterval(loop, 100);
+</script>
+</body>
+</html>
