@@ -1,56 +1,48 @@
 const express = require("express");
-const puppeteer = require("puppeteer");
 
 const app = express();
 
+// BTC price endpoint
 app.get("/", async (req, res) => {
-  let browser;
-
   try {
-    browser = await puppeteer.launch({
-      headless: "new",
-      args: [
-        "--no-sandbox",
-        "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage"
-      ]
-    });
-
-    const page = await browser.newPage();
-
-    const url =
-      "https://skyline.herold.at/project?dsrid=440&id=573576";
-
-    await page.goto(url, {
-      waitUntil: "networkidle2"
-    });
-
-    // IMPORTANT: wait for the element BEFORE scraping
-    await page.waitForSelector('a[href*="id=2370"]', {
-      timeout: 15000
-    });
-
-    // small stability buffer (helps SPA pages)
-    await page.waitForTimeout(1000);
-
-    const result = await page.$$eval('a[href*="id=2370"]', (els) =>
-      els.map((el) => ({
-        text: el.textContent.trim(),
-        href: el.getAttribute("href"),
-      }))
+    const response = await fetch(
+      "https://api.coindesk.com/v1/bpi/currentprice/BTC.json"
     );
 
-    res.json(result);
+    const data = await response.json();
 
-  } catch (err) {
-    res.status(500).json({
-      error: err.message,
+    const btcPrice = data.bpi.USD.rate_float;
+
+    res.json({
+      symbol: "BTC",
+      price_usd: btcPrice,
+      updated: data.time.updatedISO,
     });
 
-  } finally {
-    if (browser) await browser.close();
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// optional: auto-refresh endpoint
+app.get("/btc", async (req, res) => {
+  try {
+    const response = await fetch(
+      "https://api.coindesk.com/v1/bpi/currentprice/BTC.json"
+    );
+
+    const data = await response.json();
+
+    res.json({
+      symbol: "BTC",
+      price_usd: data.bpi.USD.rate_float,
+      updated: data.time.updatedISO,
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log("Server running"));
+app.listen(PORT, () => console.log("BTC server running"));
