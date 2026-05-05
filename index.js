@@ -2,45 +2,28 @@ const express = require("express");
 
 const app = express();
 
-// BTC price endpoint
 app.get("/", async (req, res) => {
   try {
     const response = await fetch(
-      "https://api.coindesk.com/v1/bpi/currentprice/BTC.json"
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
     );
 
-    const data = await response.json();
-
-    const btcPrice = data.bpi.USD.rate_float;
-
-    res.json({
-      symbol: "BTC",
-      price_usd: btcPrice,
-      updated: data.time.updatedISO,
-    });
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// optional: auto-refresh endpoint
-app.get("/btc", async (req, res) => {
-  try {
-    const response = await fetch(
-      "https://api.coindesk.com/v1/bpi/currentprice/BTC.json"
-    );
+    if (!response.ok) {
+      throw new Error("API response not OK");
+    }
 
     const data = await response.json();
 
     res.json({
       symbol: "BTC",
-      price_usd: data.bpi.USD.rate_float,
-      updated: data.time.updatedISO,
+      price_usd: data.bitcoin.usd,
+      updated: new Date().toISOString(),
     });
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 });
 
