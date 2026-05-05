@@ -1,6 +1,5 @@
 const express = require("express");
-const puppeteer = require("puppeteer-core");
-const chromium = require("chrome-aws-lambda");
+const puppeteer = require("puppeteer");
 
 const app = express();
 
@@ -9,9 +8,12 @@ app.get("/", async (req, res) => {
 
   try {
     browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless
+      headless: "new",
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage"
+      ]
     });
 
     const page = await browser.newPage();
