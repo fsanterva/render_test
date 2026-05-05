@@ -3,14 +3,31 @@
 <head>
   <title>Snake Game</title>
   <style>
+    body {
+      margin: 0;
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
     canvas {
       background: black;
-      display: block;
-      margin: auto;
+      border: 2px solid #0f0;
+    }
+
+    #score {
+      position: absolute;
+      top: 20px;
+      color: white;
+      font-family: Arial;
     }
   </style>
 </head>
 <body>
+
+<div id="score">Score: 0</div>
 <canvas id="game" width="400" height="400"></canvas>
 
 <script>
@@ -19,22 +36,32 @@ const ctx = canvas.getContext("2d");
 
 let snake = [{x: 200, y: 200}];
 let direction = "RIGHT";
-let food = {x: 100, y: 100};
+let food = randomFood();
+let score = 0;
 
 document.addEventListener("keydown", e => {
-  if (e.key === "ArrowUp") direction = "UP";
-  if (e.key === "ArrowDown") direction = "DOWN";
-  if (e.key === "ArrowLeft") direction = "LEFT";
-  if (e.key === "ArrowRight") direction = "RIGHT";
+  if (e.key === "ArrowUp" && direction !== "DOWN") direction = "UP";
+  if (e.key === "ArrowDown" && direction !== "UP") direction = "DOWN";
+  if (e.key === "ArrowLeft" && direction !== "RIGHT") direction = "LEFT";
+  if (e.key === "ArrowRight" && direction !== "LEFT") direction = "RIGHT";
 });
+
+function randomFood() {
+  return {
+    x: Math.floor(Math.random() * 40) * 10,
+    y: Math.floor(Math.random() * 40) * 10
+  };
+}
 
 function draw() {
   ctx.fillStyle = "black";
   ctx.fillRect(0, 0, 400, 400);
 
+  // food
   ctx.fillStyle = "red";
   ctx.fillRect(food.x, food.y, 10, 10);
 
+  // snake
   ctx.fillStyle = "lime";
   snake.forEach(part => {
     ctx.fillRect(part.x, part.y, 10, 10);
@@ -49,11 +76,22 @@ function update() {
   if (direction === "UP") head.y -= 10;
   if (direction === "DOWN") head.y += 10;
 
+  // game over
+  if (
+    head.x < 0 || head.x >= 400 ||
+    head.y < 0 || head.y >= 400 ||
+    snake.some(s => s.x === head.x && s.y === head.y)
+  ) {
+    alert("Game Over! Score: " + score);
+    location.reload();
+  }
+
   snake.unshift(head);
 
   if (head.x === food.x && head.y === food.y) {
-    food.x = Math.floor(Math.random() * 40) * 10;
-    food.y = Math.floor(Math.random() * 40) * 10;
+    score++;
+    document.getElementById("score").innerText = "Score: " + score;
+    food = randomFood();
   } else {
     snake.pop();
   }
@@ -66,5 +104,6 @@ function loop() {
 
 setInterval(loop, 100);
 </script>
+
 </body>
 </html>
