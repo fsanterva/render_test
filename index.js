@@ -4,19 +4,18 @@ const app = express();
 app.get("/", async (req, res) => {
   try {
     const response = await fetch(
-      "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT"
+      "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd"
     );
 
     const data = await response.json();
 
-    // ✅ safety check
-    if (!data || !data.price) {
-      throw new Error("Invalid API response: " + JSON.stringify(data));
+    if (!data || !data.bitcoin || !data.bitcoin.usd) {
+      throw new Error("Invalid API response");
     }
 
     res.json({
       symbol: "BTC",
-      price_usd: Number(data.price), // safer than parseFloat
+      price_usd: data.bitcoin.usd,
       updated: new Date().toISOString(),
     });
 
