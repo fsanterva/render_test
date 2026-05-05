@@ -9,18 +9,23 @@ app.get("/", async (req, res) => {
 
     const data = await response.json();
 
+    // ✅ safety check
+    if (!data || !data.price) {
+      throw new Error("Invalid API response: " + JSON.stringify(data));
+    }
+
     res.json({
       symbol: "BTC",
-      price_usd: parseFloat(data.price),
+      price_usd: Number(data.price), // safer than parseFloat
       updated: new Date().toISOString(),
     });
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: err.message,
+    });
   }
 });
 
-// IMPORTANT: use Render port
 const PORT = process.env.PORT || 10000;
-
 app.listen(PORT, () => console.log("BTC server running on port", PORT));
