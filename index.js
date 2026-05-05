@@ -1,5 +1,6 @@
 const express = require("express");
 const puppeteer = require("puppeteer");
+const browserFetcher = require("puppeteer").createBrowserFetcher;
 
 const app = express();
 
@@ -9,19 +10,18 @@ app.get("/", async (req, res) => {
   try {
     browser = await puppeteer.launch({
       headless: "new",
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-dev-shm-usage"
-      ],
+      ]
     });
 
     const page = await browser.newPage();
 
     await page.goto(
       "https://skyline.herold.at/project?dsrid=440&id=573576",
-      { waitUntil: "networkidle2" }
+      { waitUntil: "domcontentloaded" }
     );
 
     const result = await page.$$eval('a[href*="id=2370"]', els =>
@@ -32,9 +32,11 @@ app.get("/", async (req, res) => {
     );
 
     res.json(result);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+
   } finally {
     if (browser) await browser.close();
   }
